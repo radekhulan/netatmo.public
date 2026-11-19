@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+panel.json
+panel.local*.json
+.state/
+.venv/
+__pycache__/
+node_modules/

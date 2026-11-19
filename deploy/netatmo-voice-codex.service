@@ -1,0 +1,15 @@
+[Unit]
+Description=Hlasové rozhraní Codexu pro domácí panel
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/netatmo
+Environment=STATE_DIR=/var/lib/netatmo
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin
+ExecStart=/usr/bin/node --env-file-if-exists=.env --env-file-if-exists=/var/lib/netatmo/voice/codex.env tools/voice-codex.mjs
+Restart=on-failure
+RestartSec=4
+UMask=0077
+
+[Install]
+WantedBy=default.target

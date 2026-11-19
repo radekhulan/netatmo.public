@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#10161e" />
+    <title>Domácí panel</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon-192.png" />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/voice.css" />
+    <script type="module" src="/app.js"></script>
+    <script type="module" src="/voice.js"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <main class="dashboard">
+        <section class="column home-column" aria-label="Čas a místnosti">
+          <button id="night-open" class="clock-card" type="button" aria-label="Otevřít noční režim" aria-haspopup="dialog">
+            <time id="clock" class="clock"></time>
+            <time id="date" class="date"></time>
+          </button>
+          <div class="rooms" id="rooms"></div>
+          <div class="utilities">
+            <div class="utility-status">
+              <span class="connection" id="connection">Načítám data</span>
+              <span class="widget-status" id="room-source"></span>
+            </div>
+            <div class="utility-controls">
+              <button
+                id="keep-awake"
+                class="icon-button"
+                type="button"
+                aria-label="Ponechat displej zapnutý"
+                title="Ponechat displej zapnutý"
+                aria-pressed="false"
+                data-icon="display"
+                hidden
+              ></button>
+              <button
+                id="install"
+                class="icon-button"
+                type="button"
+                aria-label="Nainstalovat panel"
+                title="Nainstalovat panel"
+                data-icon="download"
+                hidden
+              ></button>
+              <button
+                id="refresh"
+                class="icon-button"
+                type="button"
+                aria-label="Aktualizovat data"
+                title="Aktualizovat data"
+                data-icon="refresh"
+              ></button>
+              <button id="fullscreen" class="icon-button" type="button" aria-label="Celá obrazovka" data-icon="expand" hidden></button>
+              <button id="battery-open" class="icon-button" type="button" aria-haspopup="dialog" aria-label="Baterie">
+                <span data-icon="battery" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="language-options">
+              <button id="language-toggle" type="button" aria-label="Jazyk" aria-expanded="false" aria-controls="language-popup"><span class="flag" data-flag="cs" aria-hidden="true"></span></button>
+              <div id="language-popup" class="language-popup" role="group" aria-label="Jazyk" hidden>
+                <button type="button" data-language="cs" aria-label="Čeština" title="Čeština"><span class="flag" data-flag="cs" aria-hidden="true"></span></button>
+                <button type="button" data-language="en" aria-label="English" title="English"><span class="flag" data-flag="en" aria-hidden="true"></span></button>
+                <button type="button" data-language="th" aria-label="ไทย" title="ไทย"><span class="flag" data-flag="th" aria-hidden="true"></span></button>
+              </div>
+            </div>
+            <div class="voice-controls">
+              <select class="voice-choice" data-voice-choice aria-label="Hlas asistenta" title="Hlas asistenta" hidden></select>
+              <button class="icon-button voice-recognition" type="button" data-voice-recognition aria-label="Přepis řeči" popovertarget="voice-recognition-picker" hidden>
+                <span data-recognition-icon="whisper" data-icon="cloud-off" aria-hidden="true"></span>
+                <span data-recognition-icon="elevenlabs" data-icon="cloud" aria-hidden="true" hidden></span>
+              </button>
+              <div id="voice-recognition-picker" class="voice-recognition-picker" popover role="group" aria-label="Přepis řeči" hidden>
+                <button type="button" data-recognition-provider="whisper" aria-pressed="false">
+                  <span data-icon="cloud-off" aria-hidden="true"></span>
+                  <span><strong>Místní přepis</strong><small>Whisper</small></span>
+                  <span class="recognition-check" aria-hidden="true">✓</span>
+                </button>
+                <button type="button" data-recognition-provider="elevenlabs" aria-pressed="false">
+                  <span data-icon="cloud" aria-hidden="true"></span>
+                  <span><strong>Cloudový přepis</strong><small>ElevenLabs</small></span>
+                  <span class="recognition-check" aria-hidden="true">✓</span>
+                </button>
+                <p id="voice-recognition-unavailable" hidden>ElevenLabs odmítl přístup k přepisu.</p>
+              </div>
+              <button class="icon-button voice-toggle" type="button" data-voice-toggle aria-label="Zapnout hlasového asistenta" aria-pressed="false" hidden>
+                <span class="voice-mic-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+          <span class="source data-time" id="data-time"></span>
+        </section>
+        <section class="column weather-column" aria-label="Počasí">
+          <div class="weather-hero card" id="outdoor"></div>
+          <section class="card forecast" aria-label="Předpověď">
+            <div id="forecast-status" class="widget-status forecast-status"></div>
+            <button type="button" id="forecast" class="forecast-items"></button>
+          </section>
+          <div class="radar-split">
+            <section class="card radar" aria-label="Meteoradar">
+              <div class="radar-display" id="radar-display">
+                <div class="map" id="radar-map" tabindex="0" role="group" aria-label="Mapa meteoradaru">
+                  <div class="map-image" id="map-image">
+                    <img id="radar-image" class="radar-layer" alt="" hidden />
+                    <span class="marker" id="radar-marker" role="img" aria-label="Domov" title="Domov" hidden><i></i><span class="marker-label" id="radar-home-name">Domov</span></span>
+                  </div>
+                  <span class="frame-time" id="radar-time">Načítám radar…</span>
+                  <span id="radar-status" class="widget-status"></span>
+                  <div class="radar-map-controls">
+                    <button class="icon-button" id="radar-zoom-in" type="button" aria-label="Přiblížit mapu" title="Přiblížit mapu" data-icon="plus"></button>
+                    <button class="icon-button" id="radar-zoom-out" type="button" aria-label="Oddálit mapu" title="Oddálit mapu" data-icon="minus"></button>
+                    <button class="icon-button" id="radar-center" type="button" aria-label="Vycentrovat mapu na domov" title="Vycentrovat mapu na domov" data-icon="home"></button>
+                  </div>
+                  <button class="icon-button radar-expand" id="radar-expand" type="button" aria-label="Zvětšit a přehrát meteoradar" title="Zvětšit a přehrát meteoradar" data-icon="expand"></button>
+                </div>
+                <div class="radar-tools">
+                  <button
+                    type="button"
+                    class="icon-button radar-play"
+                    id="radar-play"
+                    aria-label="Přehrát radar"
+                    data-icon="play"
+                    disabled
+                  ></button>
+                  <input
+                    id="radar-slider"
+                    type="range"
+                    min="0"
+                    max="0"
+                    value="0"
+                    aria-label="Čas radarového snímku"
+                    disabled
+                  />
+                  <button type="button" id="radar-now" class="radar-now" disabled>Teď</button>
+                  <button type="button" id="radar-next" class="radar-now" disabled>Předpověď</button>
+                </div>
+              </div>
+            </section>
+            <section class="card daily" aria-label="5 dní">
+              <span class="widget-status" id="daily-status"></span>
+              <div id="daily-forecast"></div>
+            </section>
+            <div id="precipitation" aria-label="Výhled deště, sněhu a větru"></div>
+          </div>
+        </section>
+        <section class="column control-column" aria-label="Ovládání a energie">
+          <div class="actions" id="actions" role="group" aria-label="Světla a scény">
+            <div id="light-actions"></div>
+            <button class="action" id="devices-open" type="button" aria-haspopup="dialog">
+              <span class="action-icon" data-icon="bulb"></span>
+              <span class="appliance-shortcut-copy"><b>Světla</b><span class="widget-status" id="fibaro-source"></span></span>
+              <span class="lights-open-arrow" data-icon="right" aria-hidden="true"></span>
+            </button>
+          </div>
+          <section class="card home-heating" aria-labelledby="home-heating-title">
+            <div class="service-heading">
+              <div class="heating-heading">
+                <span class="service-icon" data-icon="heat"></span>
+                <h2 id="home-heating-title">Topení</h2>
+              </div>
+              <span id="boiler-status" class="boiler-status" data-state="unknown" role="status"><span id="boiler-label">Stav kotle neznámý</span></span>
+              <select id="heating-room-select" aria-label="Místnost pro topení" disabled>
+                <button><selectedcontent></selectedcontent></button>
+              </select>
+            </div>
+            <div class="widget-status" id="heating-mode-status" role="status"></div>
+            <div class="heating-modes" role="group" aria-label="Režim topení domácnosti">
+              <button type="button" data-heating-mode="schedule" aria-pressed="false" disabled>Podle programu</button>
+              <button type="button" data-heating-mode="away" aria-pressed="false" disabled>Pryč</button>
+            </div>
+            <div class="room-heating">
+              <button id="heating-program-open" class="heat-open" type="button" aria-haspopup="dialog" disabled>Změnit program</button>
+              <button id="heating-room-open" class="heat-open room-heat-temperatures" type="button" aria-haspopup="dialog" disabled>
+                <b id="heating-room-current" title="Aktuální teplota">–</b>
+                <span data-icon="right"></span>
+                <b id="heating-room-target" class="room-target" title="Požadovaná teplota">–</b>
+              </button>
+            </div>
+            <button class="action" id="climate-open" type="button" aria-haspopup="dialog">
+              <span class="action-icon" data-icon="snow"></span>
+              <span class="climate-shortcut-body">
+                <span class="appliance-shortcut-copy climate-shortcut-copy">
+                  <b>Klimatizace</b>
+                  <small id="climate-shortcut-now" hidden></small>
+                  <small id="climate-shortcut-next" hidden></small>
+                </span>
+                <span class="climate-shortcut-state" id="climate-shortcut-state" hidden>
+                  <span id="climate-shortcut-clock" class="climate-shortcut-icon" data-icon="clock" role="img" hidden></span>
+                  <span id="climate-shortcut-eco" class="climate-shortcut-icon" data-icon="bolt" role="img" hidden></span>
+                </span>
+              </span>
+            </button>
+          </section>
+          <section class="card solar" id="solar"></section>
+          <div id="power-meters" class="card power-meters" aria-label="Příkon zařízení" hidden></div>
+          <div class="media-shortcuts" role="group" aria-label="Další zařízení">
+            <div class="spotify">
+              <button class="action" id="spotify-open" type="button">
+                <span class="action-icon spotify-icon" data-icon="spotify"></span>
+                <span class="spotify-title">Spotify</span>
+              </button>
+              <button id="spotify-quick-toggle" class="icon-button" type="button" aria-label="Pozastavit" data-icon="pause" hidden></button>
+            </div>
+            <button class="action vacuum-shortcut" id="vacuum-open" type="button" aria-haspopup="dialog" hidden>
+              <span class="action-icon" data-icon="vacuum"></span>
+              <span class="appliance-shortcut-copy"><b>Vysavač</b><small id="vacuum-shortcut-status"></small></span>
+            </button>
+            <button class="action washer-shortcut" id="washer-open" type="button" aria-haspopup="dialog" hidden>
+              <span class="action-icon" data-icon="washer"></span>
+              <span class="appliance-shortcut-copy"><b>Pračka</b><small id="washer-shortcut-status"></small></span>
+            </button>
+            <button class="action" id="coffee-open" type="button" aria-haspopup="dialog" hidden>
+              <span class="action-icon coffee-icon" data-icon="coffee"></span>
+              <span class="appliance-shortcut-copy"><b>Kávovar</b><small id="coffee-shortcut-status"></small></span>
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+    <dialog id="night-dialog" aria-label="Noční režim">
+      <button id="night-close" type="button" aria-label="Zavřít noční režim" data-icon="close" autofocus></button>
+      <div class="night-content">
+        <time id="night-clock" class="clock"></time>
+        <time id="night-date" class="date"></time>
+        <div id="night-forecast" class="forecast-items" role="group" aria-label="Předpověď po čtyřech hodinách"></div>
+        <div id="night-rooms" role="group" aria-label="Místnosti"></div>
+        <div id="night-actions" role="group" aria-label="Světla a scény">
+          <button type="button" data-action="lamps-on" disabled><span data-icon="bulb"></span>Zapnout lampičky</button>
+          <button type="button" data-action="lamps-off" disabled><span data-icon="bulb-off"></span>Vypnout lampičky</button>
+          <button type="button" data-action="lamp" disabled><span data-icon="lamp"></span>Lampa</button>
+        </div>
+        <div class="voice-night-controls">
+          <button class="icon-button voice-toggle" type="button" data-voice-toggle aria-label="Zapnout hlasového asistenta" aria-pressed="false" hidden>
+            <span class="voice-mic-icon" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+      <div id="night-toast" class="toast" role="status" hidden></div>
+    </dialog>
+    <dialog id="devices-dialog" aria-labelledby="devices-title">
+      <div class="devices-header">
+        <span class="devices-icon" data-icon="devices"></span><h2 id="devices-title">Všechna světla</h2>
+        <div class="devices-scenes">
+          <button id="led-lights-toggle" type="button" disabled hidden><span id="led-lights-icon"></span><span id="led-lights-label"></span></button>
+          <button id="all-lights-off" type="button" data-action="all-off" disabled hidden><span data-icon="power"></span><span>Vypnout všechna</span></button>
+        </div>
+        <button type="button" class="icon-button" id="devices-refresh" aria-label="Aktualizovat data" title="Aktualizovat data" data-icon="refresh"></button>
+        <button type="button" class="icon-button" id="devices-close" aria-label="Zavřít" data-icon="close" autofocus></button>
+      </div>
+      <p id="devices-status" role="status"></p>
+      <div id="devices-list"></div>
+    </dialog>
+    <dialog id="device-rgb-dialog" aria-labelledby="device-rgb-title">
+      <div class="section-heading">
+        <h2 id="device-rgb-title"></h2>
+        <button id="device-rgb-close" class="icon-button" type="button" aria-label="Zavřít" data-icon="close" autofocus></button>
+      </div>
+      <form id="device-rgb-form">
+        <fieldset class="device-rgb-colors">
+          <legend>Barva</legend>
+          <label id="device-rgb-current" hidden><input type="radio" name="color" value="current" /><span>Načtený odstín</span></label>
+          <label data-color="red"><input type="radio" name="color" value="red" /><span>Červená</span></label>
+          <label data-color="pink"><input type="radio" name="color" value="pink" /><span>Růžová</span></label>
+          <label data-color="yellow"><input type="radio" name="color" value="yellow" /><span>Žlutá</span></label>
+          <label data-color="green"><input type="radio" name="color" value="green" /><span>Zelená</span></label>
+          <label data-color="blue"><input type="radio" name="color" value="blue" /><span>Modrá</span></label>
+          <label data-color="white"><input type="radio" name="color" value="white" /><span>Bílá</span></label>
+          <label data-color="purple"><input type="radio" name="color" value="purple" /><span>Fialová</span></label>
+        </fieldset>
+        <label class="device-rgb-brightness" for="device-rgb-brightness">Jas <output id="device-rgb-level" for="device-rgb-brightness">100 %</output></label>
+        <input id="device-rgb-brightness" name="brightness" type="range" min="1" max="100" value="100" />
+        <button id="device-rgb-apply" class="primary" type="submit">Použít</button>
+        <p id="device-rgb-status" role="status"></p>
+      </form>
+    </dialog>
+    <dialog id="airplus-dialog" aria-labelledby="airplus-title">
+      <div class="section-heading">
+        <div class="washer-heading">
+          <span class="devices-icon" data-icon="air"></span>
+          <div><h2 id="airplus-title"></h2><small>Philips Air+</small></div>
+        </div>
+        <button class="icon-button" id="airplus-close" type="button" data-icon="close" aria-label="Zavřít" autofocus></button>
+      </div>
+      <div id="airplus-water" role="status" hidden><span data-icon="drop"></span><strong>Doplň vodu</strong></div>
+      <div class="airplus-layout">
+        <div class="airplus-measurements">
+          <div class="airplus-pm"><span>PM2.5</span><strong id="airplus-pm"></strong><small>µg/m³</small></div>
+          <dl id="airplus-readings" class="washer-readings"></dl>
+        </div>
+        <div id="airplus-controls" class="airplus-controls"></div>
+      </div>
+      <p id="airplus-status" role="status" hidden></p>
+    </dialog>
+    <dialog id="coffee-dialog" aria-labelledby="coffee-title">
+      <div class="section-heading">
+        <div class="washer-heading">
+          <span class="service-icon coffee-icon" data-icon="coffee"></span>
+          <div><h2 id="coffee-title">Kávovar</h2><small>De’Longhi</small></div>
+        </div>
+        <button class="icon-button" id="coffee-close" type="button" data-icon="close" aria-label="Zavřít" autofocus></button>
+      </div>
+      <div class="coffee-overview">
+        <div><strong id="coffee-status" role="status"></strong><small id="coffee-data-age" hidden></small></div>
+        <button id="coffee-wake" type="button" hidden><span data-icon="power"></span><b>Probudit</b></button>
+      </div>
+      <p id="coffee-command-status" role="status" hidden></p>
+      <ul id="coffee-alerts" aria-live="polite" hidden></ul>
+      <section class="coffee-section" id="coffee-maintenance" hidden>
+        <h3>Údržba</h3><dl id="coffee-readings" class="washer-readings"></dl>
+      </section>
+      <section class="coffee-section" id="coffee-statistics" hidden>
+        <h3>Statistiky</h3><dl id="coffee-counts" class="washer-readings"></dl>
+      </section>
+    </dialog>
+    <dialog id="washer-dialog" aria-labelledby="washer-title">
+      <div class="section-heading">
+        <div class="washer-heading">
+          <span class="devices-icon" data-icon="washer"></span>
+          <div><h2 id="washer-title">Pračka</h2><small>Haier</small></div>
+        </div>
+        <button class="icon-button" id="washer-close" type="button" data-icon="close" aria-label="Zavřít" autofocus></button>
+      </div>
+      <strong id="washer-summary" role="status"></strong>
+      <dl id="washer-readings" class="washer-readings" hidden></dl>
+      <section class="washer-power" aria-labelledby="washer-power-title">
+        <h3 id="washer-power-title">Spotřeba · Fibaro</h3>
+        <dl class="washer-readings">
+          <div><dt>Příkon</dt><dd id="washer-power-now">–</dd></div>
+          <div><dt>Spotřeba dnes</dt><dd id="washer-energy-today">–</dd></div>
+        </dl>
+      </section>
+      <p id="washer-last" hidden></p>
+      <button id="washer-notifications" type="button" hidden>Zapnout oznámení</button>
+    </dialog>
+    <dialog id="vacuum-dialog" aria-labelledby="vacuum-title">
+      <header class="vacuum-header">
+        <span class="devices-icon" data-icon="vacuum"></span>
+        <div><h2 id="vacuum-title">Vysavač</h2><p>Roborock</p></div>
+        <button class="icon-button" id="vacuum-refresh" type="button" data-icon="refresh" aria-label="Aktualizovat data" title="Aktualizovat data"></button>
+        <button class="icon-button" id="vacuum-close" type="button" data-icon="close" aria-label="Zavřít" autofocus></button>
+      </header>
+      <div class="vacuum-layout">
+        <section class="vacuum-map-panel" aria-labelledby="vacuum-map-title">
+          <div class="vacuum-live">
+            <div><span id="vacuum-state" role="status">Načítám…</span><small id="vacuum-extra"></small></div>
+            <div class="vacuum-battery"><span data-icon="battery"></span><strong id="vacuum-battery">–</strong></div>
+          </div>
+          <div class="vacuum-map-heading"><h3 id="vacuum-map-title">Mapa bytu</h3><small id="vacuum-map-count"></small></div>
+          <div class="vacuum-map">
+            <p id="vacuum-map-message">Načítám mapu…</p>
+            <img id="vacuum-map-img" alt="Mapa bytu" hidden />
+          </div>
+          <div class="vacuum-progress" id="vacuum-progress" hidden>
+            <progress id="vacuum-progress-bar" max="100" aria-label="Průběh úklidu"></progress>
+            <span id="vacuum-progress-label"></span>
+          </div>
+          <fieldset class="vacuum-choices vacuum-scope-choices" id="vacuum-scope-choices">
+            <legend>Kde uklidit</legend>
+            <div class="vacuum-scope">
+              <label><input type="radio" name="vacuum-scope" value="all" form="vacuum-form" checked />Celý byt</label>
+              <label><input type="radio" name="vacuum-scope" value="rooms" form="vacuum-form" disabled />Vybrané místnosti</label>
+            </div>
+            <div class="vacuum-rooms" id="vacuum-rooms" hidden></div>
+          </fieldset>
+        </section>
+        <section class="vacuum-control" aria-labelledby="vacuum-clean-title">
+          <h3 id="vacuum-clean-title">Nový úklid</h3>
+          <form id="vacuum-form">
+            <fieldset class="vacuum-choices vacuum-mode-group" id="vacuum-mode-choices" aria-labelledby="vacuum-mode-title" disabled>
+              <div class="vacuum-mode-heading">
+                <span id="vacuum-mode-title">Režim úklidu</span>
+                <button class="vacuum-more" id="vacuum-more" type="button" aria-expanded="false" aria-controls="vacuum-more-modes" hidden>
+                  Další <strong id="vacuum-more-selected" hidden></strong><span data-icon="right"></span>
+                </button>
+              </div>
+              <div class="vacuum-mode-options" id="vacuum-modes"></div>
+              <small id="vacuum-modes-status" role="status">Načítám…</small>
+              <div class="vacuum-mode-options" id="vacuum-more-modes" hidden></div>
+            </fieldset>
+            <div class="vacuum-parameters" id="vacuum-parameters" hidden>
+              <div class="vacuum-parameter-tiles">
+                <button type="button" data-vacuum-parameter="fan" aria-expanded="false" aria-controls="vacuum-fan-options" hidden>
+                  <span data-icon="gauge"></span><span><span>Síla sání</span><strong></strong></span><span data-icon="right"></span>
+                </button>
+                <button type="button" data-vacuum-parameter="route" aria-expanded="false" aria-controls="vacuum-route-options" hidden>
+                  <span data-icon="cycle"></span><span><span>Trasa vytírání</span><strong></strong></span><span data-icon="right"></span>
+                </button>
+                <button type="button" data-vacuum-parameter="water" aria-expanded="false" aria-controls="vacuum-water-options" hidden>
+                  <span data-icon="drop"></span><span><span>Dávka vody</span><strong></strong></span><span data-icon="right"></span>
+                </button>
+              </div>
+              <fieldset class="vacuum-choices" id="vacuum-fan-options" aria-label="Síla sání" hidden disabled>
+                <div class="vacuum-setting-options"></div>
+              </fieldset>
+              <fieldset class="vacuum-choices" id="vacuum-route-options" aria-label="Trasa vytírání" hidden disabled>
+                <div class="vacuum-setting-options"></div>
+              </fieldset>
+              <fieldset class="vacuum-choices" id="vacuum-water-options" aria-label="Dávka vody" hidden disabled>
+                <div class="vacuum-setting-options"></div>
+                <div id="vacuum-water-level-control" hidden>
+                  <span id="vacuum-water-level-label">Stupeň vody (1–30)</span>
+                  <output id="vacuum-water-value" for="vacuum-water-level">15</output>
+                  <input id="vacuum-water-level" name="waterLevel" type="range" min="1" max="30" value="15" step="1" aria-labelledby="vacuum-water-level-label" disabled />
+                </div>
+              </fieldset>
+            </div>
+            <button class="primary vacuum-start" type="submit" disabled><span data-icon="play"></span>Spustit úklid</button>
+          </form>
+          <div class="vacuum-transport" id="vacuum-transport" hidden>
+            <button class="secondary" type="button" data-vacuum-action="pause" hidden><span data-icon="pause"></span>Pozastavit</button>
+            <button class="secondary" type="button" data-vacuum-action="resume" hidden><span data-icon="play"></span>Pokračovat</button>
+            <button class="secondary" type="button" data-vacuum-action="dock" hidden><span data-icon="home"></span>Zpět do doku</button>
+          </div>
+          <p id="vacuum-message" role="status" hidden></p>
+        </section>
+        <section class="vacuum-history" aria-labelledby="vacuum-history-title">
+          <h3 id="vacuum-history-title">Poslední úklid</h3>
+          <div id="vacuum-history">Načítám…</div>
+        </section>
+        <section class="vacuum-maintenance" aria-labelledby="vacuum-maintenance-title">
+          <h3 id="vacuum-maintenance-title">Zbývá do údržby</h3>
+          <div id="vacuum-maintenance">Načítám…</div>
+        </section>
+      </div>
+    </dialog>
+    <dialog id="climate-dialog" aria-labelledby="climate-title">
+      <div class="section-heading">
+        <h2 id="climate-title">Klimatizace</h2>
+        <button type="button" id="climate-eco-toggle" class="secondary" aria-label="Eco provoz" aria-pressed="false" disabled>
+          <span data-icon="bolt"></span><span id="climate-eco-toggle-label">Eco vypnuto</span>
+        </button>
+        <button type="button" class="icon-button" id="climate-close" aria-label="Zavřít" data-icon="close" autofocus></button>
+      </div>
+      <div class="climate-layout">
+        <div class="climate-main">
+          <p id="climate-status" role="status"></p>
+          <div id="climate-controls"></div>
+          <section class="climate-eco" aria-label="Eco provoz">
+            <dl class="climate-eco-readings">
+              <div><dt>Výroba FVE</dt><dd id="eco-solar">—</dd></div>
+              <div><dt>Příkon klimatizace</dt><dd id="eco-power">—</dd></div>
+              <div id="eco-household-meter" hidden><dt>Příkon domu</dt><dd id="eco-household">—</dd></div>
+              <div class="climate-eco-threshold">
+                <dt>Hranice Eco</dt>
+                <dd id="eco-threshold">—</dd>
+                <button id="climate-eco-stats-open" type="button" aria-label="Statistika Eco" title="Statistika Eco" aria-haspopup="dialog" data-icon="gauge" hidden></button>
+              </div>
+            </dl>
+            <p id="climate-eco-status" role="status"></p>
+          </section>
+        </div>
+        <section id="climate-timer" aria-labelledby="climate-timer-title">
+          <div class="climate-timer-header">
+            <h3 id="climate-timer-title"><span data-icon="clock"></span><span>Časovač</span></h3>
+            <div class="climate-timer-tools">
+              <button id="climate-eco-settings-open" class="secondary" type="button" aria-haspopup="dialog" disabled>Nastavení</button>
+              <button id="climate-presets-open" class="secondary" type="button" aria-haspopup="dialog" disabled>Plány</button>
+            </div>
+          </div>
+          <form id="climate-timer-form">
+            <div class="climate-timer-settings">
+              <label><span>Režim</span><select name="mode">
+                <option value="">Aktuální režim</option><option value="heat">Topení</option><option value="cool">Chlazení</option>
+              </select></label>
+              <small id="climate-plan-eco-summary" hidden></small>
+            </div>
+            <input type="hidden" name="ecoPercent" />
+            <fieldset id="climate-timer-fields">
+              <div class="climate-timer-step" data-kind="start">
+                <div class="climate-timer-step-heading">
+                  <b>Zapnout</b><label><input type="checkbox" name="now" checked /> Hned</label>
+                  <label class="climate-timer-eco"><input type="checkbox" name="startEco" aria-label="Eco podle FVE" disabled /> Eco</label>
+                </div>
+                <div class="climate-timer-step-fields">
+                  <select name="startTemperature" aria-label="Teplota při zapnutí" required></select>
+                  <input type="time" name="startTime" aria-label="Čas zapnutí" required hidden disabled />
+                  <time data-preview="start"></time>
+                </div>
+              </div>
+              <div class="climate-timer-step" data-kind="temperature">
+                <div class="climate-timer-step-heading">
+                  <label><input type="checkbox" name="hasChange" /> <b>Změnit teplotu</b></label>
+                  <label class="climate-timer-eco"><input type="checkbox" name="changeEco" aria-label="Eco podle FVE" disabled /> Eco</label>
+                </div>
+                <div class="climate-timer-step-fields">
+                  <select name="changeTemperature" aria-label="Teplota po změně" required disabled></select>
+                  <input type="time" name="changeTime" aria-label="Čas změny teploty" value="22:00" required disabled />
+                  <time data-preview="change" hidden></time>
+                </div>
+              </div>
+              <div class="climate-timer-step" data-kind="temperature">
+                <div class="climate-timer-step-heading">
+                  <label><input type="checkbox" name="hasExtraChange" disabled /> <b>Změnit teplotu znovu</b></label>
+                  <label class="climate-timer-eco"><input type="checkbox" name="extraChangeEco" aria-label="Eco podle FVE" disabled /> Eco</label>
+                </div>
+                <div class="climate-timer-step-fields">
+                  <select name="extraChangeTemperature" aria-label="Teplota po druhé změně" required disabled></select>
+                  <input type="time" name="extraChangeTime" aria-label="Čas druhé změny teploty" value="03:00" required disabled />
+                  <time data-preview="extraChange" hidden></time>
+                </div>
+              </div>
+              <div class="climate-timer-step climate-timer-stop" data-kind="stop">
+                <div class="climate-timer-step-fields">
+                  <input type="time" name="stopTime" aria-label="Čas vypnutí" value="06:00" required disabled />
+                  <time data-preview="stop" hidden></time>
+                </div>
+                <label class="climate-timer-step-heading climate-timer-stop-check"><b>Vypnout</b><input type="checkbox" name="hasStop" /></label>
+              </div>
+            </fieldset>
+            <button class="primary" id="climate-timer-start" type="submit">Spustit časovač</button>
+          </form>
+          <ol id="climate-timer-plan" hidden></ol>
+          <button class="secondary" id="climate-timer-cancel" type="button" hidden>Zrušit časovač</button>
+          <button class="secondary" id="climate-timer-new" type="button" hidden>Nový časovač</button>
+          <p id="climate-timer-status" role="status"></p>
+        </section>
+      </div>
+    </dialog>
+    <dialog id="climate-eco-settings" aria-labelledby="climate-eco-settings-title">
+      <div class="section-heading">
+        <h2 id="climate-eco-settings-title">Nastavení Eco</h2>
+        <button id="climate-eco-settings-close" class="icon-button" aria-label="Zavřít" data-icon="close" type="button"></button>
+      </div>
+      <form id="climate-eco-settings-form">
+        <fieldset class="eco-settings-group">
+          <legend>Fotovoltaika</legend>
+          <label>Minimální okamžitý výkon FVE <span><input type="number" name="minimumSolarW" min="0" step="1" value="2000" required /> W</span></label>
+        </fieldset>
+        <fieldset class="eco-settings-group">
+          <legend>Klimatizace po rozběhu</legend>
+          <label>Příkon klimatizace z výroby FVE (max.) <span><input type="number" name="climateShare" min="20" max="200" step="any" required /> %</span></label>
+          <label>Výroba FVE vůči příkonu klimatizace (min.) <span><input type="number" name="climatePercent" min="50" max="500" step="any" required /> %</span></label>
+        </fieldset>
+        <fieldset class="eco-settings-group" id="eco-settings-household">
+          <legend>Celý dům</legend>
+          <label>Příkon domu z výroby FVE (max.) <span><input type="number" name="householdPercent" min="1" max="100" step="any" required /> %</span></label>
+        </fieldset>
+        <fieldset class="eco-settings-group" id="eco-settings-plan">
+          <legend>Rozpracovaný plán</legend>
+          <label>Pevné minimum FVE pro Eco <span><input type="number" name="planPercent" min="50" max="500" step="1" placeholder="Auto" /> %</span></label>
+        </fieldset>
+        <button class="primary" type="submit">Uložit</button>
+        <p id="climate-eco-settings-status" role="status"></p>
+      </form>
+    </dialog>
+    <dialog id="climate-presets" aria-labelledby="climate-presets-title">
+      <div class="section-heading">
+        <h2 id="climate-presets-title">Uložené plány</h2>
+        <button id="climate-presets-close" class="icon-button" aria-label="Zavřít" data-icon="close" type="button" autofocus></button>
+      </div>
+      <ul id="climate-preset-list"></ul>
+      <form id="climate-preset-form">
+        <input name="name" aria-label="Název plánu" placeholder="Název plánu" maxlength="40" required />
+        <button class="primary" type="submit">Uložit plán</button>
+      </form>
+      <p id="climate-preset-status" role="status"></p>
+    </dialog>
+    <dialog id="climate-eco-dialog" aria-labelledby="climate-eco-stats-title">
+      <div class="section-heading">
+        <h2 id="climate-eco-stats-title">Statistika Eco</h2>
+        <button id="climate-eco-stats-close" class="icon-button" aria-label="Zavřít" data-icon="close" type="button" autofocus></button>
+      </div>
+      <div class="eco-stats-tabs" role="group" aria-label="Statistika Eco">
+        <button class="secondary" type="button" data-eco-view="estimates" aria-controls="climate-eco-stats" aria-pressed="true">Odhady</button>
+        <button class="secondary" type="button" data-eco-view="chart" aria-controls="eco-history" aria-pressed="false">Graf Eco</button>
+        <button class="secondary" type="button" data-eco-view="history" aria-controls="eco-history" aria-pressed="false">Historie</button>
+      </div>
+      <div id="climate-eco-stats"></div>
+      <div id="eco-history" hidden></div>
+    </dialog>
+    <dialog id="history-dialog" aria-labelledby="history-title">
+      <div class="section-heading"><h2 id="history-title"></h2><button id="history-close" class="icon-button" aria-label="Zavřít" data-icon="close" type="button"></button></div>
+      <dl id="history-room-current" hidden></dl>
+      <div class="history-bar">
+        <div id="history-tabs" class="history-tabs"></div>
+        <div id="history-periods" class="history-tabs" role="group" aria-label="Období grafu" hidden>
+          <button type="button" data-hours="3">3 h</button>
+          <button type="button" data-hours="6">6 h</button>
+          <button type="button" data-hours="9">9 h</button>
+          <button type="button" data-hours="12">12 h</button>
+          <button type="button" data-hours="24">24 h</button>
+        </div>
+        <span id="history-summary"></span>
+      </div>
+      <p id="history-status" role="status"></p>
+      <div id="history-chart" hidden>
+        <canvas id="history-plot" width="720" height="240" role="img"></canvas>
+        <div id="history-hours"></div>
+      </div>
+    </dialog>
+    <dialog id="day-dialog" aria-labelledby="day-title">
+      <div class="section-heading">
+        <h2 id="day-title">Předpověď</h2>
+        <div id="day-navigation" hidden>
+          <button type="button" id="day-previous" class="icon-button" aria-label="Předchozí den" data-icon="left"></button>
+          <button type="button" id="day-next" class="icon-button" aria-label="Následující den" data-icon="right"></button>
+        </div>
+        <button type="button" id="day-close" class="icon-button" aria-label="Zavřít předpověď" data-icon="close"></button>
+      </div>
+      <div id="day-details"></div>
+    </dialog>
+    <dialog id="radar-dialog" aria-labelledby="radar-dialog-title">
+      <div class="section-heading">
+        <h2 id="radar-dialog-title">Meteoradar</h2>
+        <button type="button" id="radar-close" class="icon-button" aria-label="Zavřít meteoradar" data-icon="close"></button>
+      </div>
+      <div id="radar-expanded"></div>
+    </dialog>
+    <dialog id="spotify" aria-labelledby="spotify-title">
+      <header class="spotify-header">
+        <h2 id="spotify-title"><span class="service-icon spotify-icon" data-icon="spotify"></span> Spotify</h2>
+        <div class="spotify-account">
+          <button class="primary" id="spotify-connect" type="button" hidden>Připojit účet</button>
+          <button class="spotify-text-button" id="spotify-disconnect" type="button" hidden>Odpojit účet</button>
+          <a class="spotify-text-button" href="https://open.spotify.com/" target="_blank" rel="noopener noreferrer">Otevřít Spotify ↗</a>
+        </div>
+        <button
+          id="spotify-close"
+          class="icon-button"
+          type="button"
+          aria-label="Zavřít Spotify"
+          data-icon="close"
+          autofocus
+        ></button>
+      </header>
+      <p id="spotify-status" role="status"></p>
+      <p id="spotify-rate-limit" role="status"></p>
+      <div id="spotify-library" hidden>
+        <div class="spotify-content">
+          <form id="spotify-search" class="spotify-search">
+            <div class="spotify-search-field"><span data-icon="search"></span>
+              <input id="spotify-query" type="search" aria-label="Skladba nebo interpret" placeholder="Skladba nebo interpret" maxlength="100" required />
+            </div>
+            <button class="primary" type="submit">Hledat</button>
+          </form>
+          <section id="spotify-search-results" aria-labelledby="spotify-results-title" hidden>
+            <div class="spotify-section-heading">
+              <h3 id="spotify-results-title">Výsledky hledání</h3>
+              <button id="spotify-clear" class="spotify-text-button" type="button">Zrušit hledání</button>
+            </div>
+            <div id="spotify-results" class="spotify-grid"></div>
+          </section>
+          <section id="spotify-playlist-section" aria-labelledby="spotify-playlists-title">
+            <div class="spotify-section-heading"><h3 id="spotify-playlists-title">Moje playlisty</h3></div>
+            <div id="spotify-playlists" class="spotify-grid"></div>
+            <button class="secondary" id="spotify-more" type="button" hidden>Další playlisty</button>
+          </section>
+        </div>
+        <footer class="spotify-transport">
+          <div class="spotify-cover" id="spotify-current-cover" aria-hidden="true"></div>
+          <div class="spotify-current">
+            <strong id="spotify-track">Zatím se nic nepřehrává</strong>
+            <span id="spotify-artist"></span>
+          </div>
+          <div class="spotify-controls">
+            <button class="icon-button" id="spotify-previous" type="button" aria-label="Předchozí skladba" data-icon="previous" disabled></button>
+            <button class="icon-button" id="spotify-toggle" type="button" aria-label="Přehrát" data-icon="play" disabled></button>
+            <button class="icon-button" id="spotify-next" type="button" aria-label="Následující skladba" data-icon="next" disabled></button>
+          </div>
+          <a id="spotify-current-link" class="spotify-text-button" href="https://open.spotify.com/" target="_blank" rel="noopener noreferrer" aria-label="Otevřít právě přehrávanou skladbu na Spotify" hidden>↗</a>
+        </footer>
+      </div>
+    </dialog>
+    <dialog id="battery-dialog" aria-labelledby="battery-title">
+      <header class="section-heading">
+        <h2 id="battery-title">Baterie</h2>
+        <button id="battery-refresh" class="secondary" type="button"><span data-icon="refresh"></span><span>Obnovit</span></button>
+        <button id="battery-close" class="icon-button" type="button" aria-label="Zavřít" data-icon="close" autofocus></button>
+      </header>
+      <p id="battery-refresh-status" role="status"></p>
+      <div id="battery-groups" class="battery-groups"></div>
+    </dialog>
+    <dialog id="heat-dialog" aria-labelledby="heat-title">
+      <form id="heat-form">
+        <div class="section-heading">
+          <h2 id="heat-title">Topení</h2>
+          <button type="button" id="heat-close" class="icon-button" aria-label="Zavřít" data-icon="close"></button>
+        </div>
+        <div class="heat-current"><span>Aktuální teplota</span><b id="heat-current"></b></div>
+        <div class="heat-current"><span>Požadovaná teplota</span><b id="heat-target"></b></div>
+        <div class="heat-current heat-valve"><span>Otevření hlavice</span><b><span data-icon="heat" aria-hidden="true"></span><span id="heat-valve"></span></b></div>
+        <div class="heat-current heat-battery"><span>Baterie</span><b><span data-icon="battery" aria-hidden="true"></span><span id="heat-battery"></span></b></div>
+        <div id="heat-remaining" class="heat-remaining" hidden><span>Zbývá</span><b id="heat-remaining-time"></b></div>
+        <div id="heat-plan" class="heat-plan" hidden></div>
+        <section id="heat-history" class="day-chart" aria-labelledby="heat-history-title" hidden>
+          <div class="heat-history-heading">
+            <h3 id="heat-history-title">Naměřená teplota</h3>
+            <span><span>Posledních 24 h</span><time id="heat-history-at" hidden></time></span>
+          </div>
+          <div id="heat-history-status" role="status"></div>
+          <div id="heat-history-plot" class="day-chart-plot" hidden></div>
+        </section>
+        <div id="heat-adjust">
+          <div class="heat-setpoint">
+            <label for="heat-temperature">Ruční teplota</label>
+            <div class="temperature-input">
+              <button type="button" id="heat-minus" aria-label="Snížit teplotu">−</button
+              ><input id="heat-temperature" type="number" min="7" max="28" step="0.5" required /><span>°C</span
+              ><button type="button" id="heat-plus" aria-label="Zvýšit teplotu">+</button>
+            </div>
+          </div>
+          <fieldset class="heat-duration">
+            <legend>Délka ručního nastavení</legend>
+            <div class="heat-duration-options">
+              <label><input type="radio" name="durationHours" value="1" /><span>1 h</span></label>
+              <label><input type="radio" name="durationHours" value="2" checked /><span>2 h</span></label>
+              <label><input type="radio" name="durationHours" value="3" /><span>3 h</span></label>
+              <label><input type="radio" name="durationHours" value="6" /><span>6 h</span></label>
+              <label><input type="radio" name="durationHours" value="8" /><span>8 h</span></label>
+              <label><input type="radio" name="durationHours" value="12" /><span>12 h</span></label>
+            </div>
+          </fieldset>
+          <button class="primary" type="submit">Nastavit teplotu</button>
+          <button class="secondary" id="heat-schedule" type="button">Vrátit na program domácnosti</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="heating-program-dialog" aria-labelledby="heating-program-title">
+      <header class="section-heading heating-program-heading">
+        <h2 id="heating-program-title">Program topení</h2>
+        <button id="heating-program-close" class="icon-button" type="button" aria-label="Zavřít" data-icon="close" autofocus></button>
+      </header>
+      <p id="heating-program-status" role="status"></p>
+      <form id="heating-program-form" hidden>
+        <fieldset id="heating-program-fields">
+          <section class="heating-program-section" aria-labelledby="heating-program-temperatures">
+            <h3 id="heating-program-temperatures">Teploty v místnostech</h3>
+            <div class="heating-program-table"><table id="heating-program-matrix"></table></div>
+          </section>
+          <section class="heating-program-section" aria-labelledby="heating-program-day">
+            <h3 id="heating-program-day">Denní rozvrh</h3>
+            <p>Rozvrh platí pro každý den.</p>
+            <div id="heating-program-periods"></div>
+            <button id="heating-program-add" class="secondary" type="button"><span data-icon="plus"></span><span>Přidat čas</span></button>
+            <div id="heating-program-chart" class="heating-program-chart"></div>
+          </section>
+        </fieldset>
+        <footer class="heating-program-footer">
+          <button id="heating-program-save" class="primary" type="submit">Uložit program</button>
+        </footer>
+      </form>
+    </dialog>
+    <dialog id="voice-dialog" aria-labelledby="voice-title">
+      <button id="voice-close" type="button" aria-label="Zavřít asistenta" autofocus><span aria-hidden="true">×</span></button>
+      <div class="voice-orb" aria-hidden="true">
+        <div class="voice-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <h2 id="voice-title"></h2>
+      <p id="voice-transcript"></p>
+      <p id="voice-feedback" role="status" aria-live="polite"></p>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

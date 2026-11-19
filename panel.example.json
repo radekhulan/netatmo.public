@@ -1,0 +1,32 @@
+{
+  "location": {
+    "name": "Ukázková domácnost"
+  },
+  "rooms": [
+    {
+      "name": "Obývák",
+      "icon": "sofa"
+    },
+    {
+      "name": "Ložnice",
+      "icon": "bed"
+    },
+    {
+      "name": "Kuchyně",
+      "icon": "coffee"
+    }
+  ],
+  "radar": {
+    "enabled": false
+  },
+  "climate": {},
+  "fibaro": {
+    "devices": {},
+    "actions": [],
+    "powerMeters": [],
+    "ledSceneDevices": []
+  },
+  "airplus": {
+    "devices": {}
+  }
+}

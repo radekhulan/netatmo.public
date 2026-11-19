@@ -1,0 +1,14 @@
+{
+  "name": "netatmo-panel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "devices": "node --env-file-if-exists=.env lib/discover.mjs"
+  },
+  "license": "MIT"
+}

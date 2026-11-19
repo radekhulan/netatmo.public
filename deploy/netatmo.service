@@ -1,0 +1,21 @@
+[Unit]
+Description=Domácí panel Netatmo
+After=network-online.target
+
+[Service]
+User=netatmo
+WorkingDirectory=/opt/netatmo
+ExecStart=/usr/bin/node --env-file-if-exists=.env server.mjs
+Environment=STATE_DIR=/var/lib/netatmo
+StateDirectory=netatmo
+StateDirectoryMode=0700
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
